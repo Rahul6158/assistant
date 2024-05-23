@@ -1,6 +1,3 @@
-from streamlit_webrtc import webrtc_streamer, RTCConfiguration
-import av
-import cv2
+from streamlit_webrtc import webrtc_streamer
 
-webrtc_streamer(key= 1, video_transformer_factory=None)
-
+webrtc_streamer(key="example", video_constraints={"facing_mode": "user"})
