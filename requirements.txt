@@ -1,3 +1,4 @@
-openCV
-PIL
-transformers.pipeline
+opencv-python-headless
+Pillow
+matplotlib
+torch
