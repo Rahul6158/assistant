@@ -1,3 +1,2 @@
-pytorch
+streamlit 
 transformers
-streamlit
