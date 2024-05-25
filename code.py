@@ -1,22 +1,23 @@
-from streamlit_webrtc import webrtc_streamer, RTCConfiguration
-import av
-import cv2
+import streamlit as st
+from transformers import pipeline
 
-cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+# Load the question-answering pipeline
+pipe = pipeline("question-answering", model="Alexander-Learn/bert-finetuned-squad")
 
-class VideoProcessor:
-	def recv(self, frame):
-		frm = frame.to_ndarray(format="bgr24")
+# Streamlit app title and description
+st.title("Question Answering Bot")
+st.write("Ask a question and get an answer!")
 
-		faces = cascade.detectMultiScale(cv2.cvtColor(frm, cv2.COLOR_BGR2GRAY), 1.1, 3)
+# Input box for the user to enter a question
+question = st.text_input("Enter your question:")
 
-		for x,y,w,h in faces:
-			cv2.rectangle(frm, (x,y), (x+w, y+h), (0,255,0), 3)
+# Button to submit the question
+if st.button("Ask"):
+    if question:
+        # Use the pipeline to get the answer
+        answer = pipe({"question": question, "context": "Replace this with your context text"})
+        # Display the answer
+        st.write("Answer:", answer["answer"])
+    else:
+        st.write("Please enter a question.")
 
-		return av.VideoFrame.from_ndarray(frm, format='bgr24')
-
-webrtc_streamer(key="key", video_processor_factory=VideoProcessor,
-				rtc_configuration=RTCConfiguration(
-					{"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-					)
-	)
