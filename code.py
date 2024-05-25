@@ -1,25 +1,22 @@
 import streamlit as st
-from transformers import pipeline, AutoTokenizer, AutoModelForQuestionAnswering
+from transformers import pipeline
 
 # Load the question-answering pipeline
-tokenizer = AutoTokenizer.from_pretrained("Alexander-Learn/bert-finetuned-squad")
-model = AutoModelForQuestionAnswering.from_pretrained("Alexander-Learn/bert-finetuned-squad")
-pipe = pipeline("question-answering", model=model, tokenizer=tokenizer)
+pipe = pipeline("question-answering", model="Alexander-Learn/bert-finetuned-squad")
 
-# Streamlit app title and description
+# Streamlit UI
 st.title("Question Answering Bot")
-st.write("Ask a question and get an answer!")
+st.write("Ask a question and the bot will provide an answer.")
 
-# Input box for the user to enter a question
-question = st.text_input("Enter your question:")
+# Text input for the question
+question = st.text_input("Enter your question here:")
 
-
-# Button to submit the question
-if st.button("Ask"):
+# Button to trigger the model
+if st.button("Answer"):
     if question:
-        # Use the pipeline to get the answer
-        answer = pipe(question=question, context="Replace this with your context text")
-        # Display the answer
-        st.write("Answer:", answer["answer"])
+        # Use the pipeline to answer the question
+        answer = pipe(question=question, context="")['answer']
+        st.write(f"Answer: {answer}")
     else:
         st.write("Please enter a question.")
+
