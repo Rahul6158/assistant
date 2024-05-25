@@ -1,6 +1,3 @@
 streamlit_webrtc
-opencv-python-headless
-Pillow
-matplotlib
-torch
 transformers
+streamlit
