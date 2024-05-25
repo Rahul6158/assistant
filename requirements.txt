@@ -1,4 +1,4 @@
 streamlit_webrtc
 pytorch
-transformers==4.11.3
+transformers
 streamlit==1.8.0
