@@ -1,4 +1,4 @@
-from tkinter import *
+import streamlit as st
 from transformers import pipeline
 
 # Load the question-answering pipeline
@@ -11,30 +11,15 @@ def get_answer(question, context_file):
     result = qa_pipeline(question=question, context=context)
     return result['answer']
 
-# Function to handle button click event
-def on_send_click():
-    question = entry_question.get()
-    context_file = 'your_context_file.txt'
-    answer = get_answer(question, context_file)
-    label_answer.config(text="Answer: " + answer)
+# Streamlit app
+def main():
+    st.title("Question Answering Bot")
+    st.write("Enter your question:")
+    question = st.text_input("Question")
+    context_file = 'your_context_file.txt'  # Provide the path to your context file
+    if st.button("Get Answer"):
+        answer = get_answer(question, context_file)
+        st.write("Answer: " + answer)
 
-# Create the GUI window
-root = Tk()
-root.title("Question Answering Bot")
-
-# Question input
-label_question = Label(root, text="Enter your question:")
-label_question.pack()
-entry_question = Entry(root, width=50)
-entry_question.pack()
-
-# Send button
-btn_send = Button(root, text="Send", command=on_send_click)
-btn_send.pack()
-
-# Answer display
-label_answer = Label(root, text="")
-label_answer.pack()
-
-# Start the GUI event loop
-root.mainloop()
+if __name__ == "__main__":
+    main()
