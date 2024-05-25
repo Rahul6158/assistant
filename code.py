@@ -1,21 +1,44 @@
-import streamlit as st
+from tkinter import *
 from transformers import pipeline
 
 # Load the question-answering pipeline
-pipe = pipeline("question-answering", model="bert")
+qa_pipeline = pipeline("question-answering", model="Alexander-Learn/bert-finetuned-squad")
 
-# Streamlit UI
-st.title("Question Answering Bot")
-st.write("Ask a question and the bot will provide an answer.")
+# Function to handle button click event
+def on_send_click():
+    question = entry_question.get()
+    answer = get_answer(question)
+    label_answer.config(text="Answer: " + answer)
 
-# Text input for the question
-question = st.text_input("Enter your question here:")
+# Function to get the answer for a given question
+def get_answer(question):
+    context = entry_context.get()
+    result = qa_pipeline(question=question, context=context)
+    return result['answer']
 
-# Button to trigger the model
-if st.button("Answer"):
-    if question:
-        # Use the pipeline to answer the question
-        answer = pipe(question=question, context="")['answer']
-        st.write(f"Answer: {answer}")
-    else:
-        st.write("Please enter a question.")
+# Create the GUI window
+root = Tk()
+root.title("Question Answering Bot")
+
+# Context input
+label_context = Label(root, text="Enter the context:")
+label_context.pack()
+entry_context = Entry(root, width=50)
+entry_context.pack()
+
+# Question input
+label_question = Label(root, text="Enter your question:")
+label_question.pack()
+entry_question = Entry(root, width=50)
+entry_question.pack()
+
+# Send button
+btn_send = Button(root, text="Send", command=on_send_click)
+btn_send.pack()
+
+# Answer display
+label_answer = Label(root, text="")
+label_answer.pack()
+
+# Start the GUI event loop
+root.mainloop()
