@@ -1,3 +1,4 @@
 streamlit_webrtc
 transformers
 streamlit
+pytorch
