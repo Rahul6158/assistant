@@ -1,3 +1,2 @@
 streamlit 
 transformers
-python3-tk
