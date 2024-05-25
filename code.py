@@ -2,7 +2,7 @@ import streamlit as st
 from transformers import pipeline
 
 # Load the question-answering pipeline
-pipe = pipeline("question-answering", model="Alexander-Learn/bert-finetuned-squad")
+pipe = pipeline("question-answering", model="bert")
 
 # Streamlit UI
 st.title("Question Answering Bot")
@@ -19,4 +19,3 @@ if st.button("Answer"):
         st.write(f"Answer: {answer}")
     else:
         st.write("Please enter a question.")
-
