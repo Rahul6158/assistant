@@ -1,42 +1,64 @@
 import streamlit as st
-from transformers import BlipProcessor, BlipForQuestionAnswering
 from PIL import Image
 import torch
+from transformers import AutoProcessor, AutoTokenizer, ViltForQuestionAnswering
+from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, WebRtcMode
+import av
+import numpy as np
 
-# Load the processor and model
-processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
-model = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
+# Load VQA model, processor, and tokenizer from Hugging Face
+model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+processor = AutoProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+tokenizer = AutoTokenizer.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 
-# Function to predict objects in an image
-def predict_object(image, question):
-    # Process inputs
-    inputs = processor(image, question, return_tensors="pt")
+# Streamlit app
+st.title("Visual Question Answering")
 
-    # Perform inference
-    with torch.no_grad():
-        generated_ids = model.generate(**inputs)
-        answer = processor.decode(generated_ids[0], skip_special_tokens=True)
+st.write("Upload an image or capture a live image and ask a question about it.")
 
-    return answer
-
-# Streamlit UI
-st.title("Image Question Answering with BLIP")
-st.write("Upload an image and ask a question about it.")
-
-# File uploader for image
+# Image upload
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
+# Placeholder for image
+image = None
+
+# Class to process the video stream
+class VideoTransformer(VideoTransformerBase):
+    def _init_(self):
+        self.image = None
+
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        self.image = Image.fromarray(img)
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+# Streamlit WebRTC streamer
+ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformer)
+
+# Display captured image from webcam
+if ctx.video_transformer:
+    image = ctx.video_transformer.image
+    if image is not None:
+        st.image(image, caption='Captured Image', use_column_width=True)
+
+# Display uploaded image
 if uploaded_file is not None:
-    # Open the image
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Text input for question
-    question = st.text_input("Enter your question:")
+# Question input
+question = st.text_input("Ask a question about the image")
 
-    if question:
-        # Predict the answer
-        answer = predict_object(image, question)
-        st.write(f"**Question:** {question}")
-        st.write(f"**Answer:** {answer}")
+if image is not None and question:
+    # Prepare inputs for the VQA model with padding
+    inputs = processor(images=image, text=question, return_tensors="pt", padding="max_length", truncation=True)
 
+    # Forward pass
+    outputs = model(**inputs)
+    logits = outputs.logits
+    predicted_answer = torch.argmax(logits, dim=1)
+
+    # Convert predicted answer to text
+    answer = tokenizer.decode(predicted_answer, skip_special_tokens=True)
+
+    st.write("Answer:", answer)
