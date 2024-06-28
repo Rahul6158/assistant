@@ -5,8 +5,8 @@ from transformers import AutoProcessor, AutoTokenizer, ViltForQuestionAnswering
 from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, WebRtcMode
 import av
 
-# Check transformers version
-print("Transformers version:", transformers.__version__)
+# Ensure torch is imported and version is printed
+print("Torch version:", torch.__version__)
 
 # Load VQA model, processor, and tokenizer from Hugging Face
 model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
