@@ -4,3 +4,4 @@ pillow
 torch
 streamlit-webrtc 
 opencv-python-headless
+tensorflow
