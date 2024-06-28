@@ -1,59 +1,68 @@
-# Install necessary packages
-
-
-# Import necessary libraries
 import streamlit as st
 from PIL import Image
-from transformers import BlipProcessor, BlipForQuestionAnswering
-import numpy as np
-import cv2
+from transformers import AutoProcessor, AutoTokenizer, ViltForQuestionAnswering
+from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, WebRtcMode
+import av
+import torch
 
-# Load the BLIP model and processor
-processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
-model = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base")
+# Ensure torch and transformers are up-to-date
+print(torch.__version__)
+# 1.10.0+cu113
 
-# Define the Streamlit application
-def main():
-    st.title("Visual Question Answering with BLIP")
+print(torch.version.cuda)
+# 11.3
 
-    # Add a sidebar with information
-    st.sidebar.title("About This App")
-    st.sidebar.write("## Features")
-    st.sidebar.write("""
-    - Upload an image
-    - Ask a question about the image
-    - Get an AI-generated answer
-    """)
-    st.sidebar.write("## How to Use")
-    st.sidebar.write("""
-    1. Upload an image using the uploader.
-    2. Enter a question about the image in the text input.
-    3. View the generated answer below the input.
-    """)
-    st.sidebar.write("### Developed by Vinay")
+# Load VQA model, processor, and tokenizer from Hugging Face
+model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+processor = AutoProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+tokenizer = AutoTokenizer.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 
+# Streamlit app
+st.title("Visual Question Answering")
 
-    # Capture or upload an image
-    image_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-    
-    if image_file is not None:
-        raw_image = Image.open(image_file).convert('RGB')
-        st.image(raw_image, caption='Uploaded Image', use_column_width=True)
+st.write("Upload an image or capture a live image and ask a question about it.")
 
-        # Ask a question
-        question = st.text_input("Ask a question about the image:")
+# Class to process the video stream
+class VideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        super().__init__()
+        self.image = None
 
-        if question:
-            # Process the inputs
-            inputs = processor(raw_image, question, return_tensors="pt")
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        image = Image.fromarray(img)
+        self.image = image
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-            # Generate the output
-            out = model.generate(**inputs)
+# Streamlit WebRTC streamer
+ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformer)
 
-            # Decode and print the result
-            answer = processor.decode(out[0], skip_special_tokens=True)
-            st.write("Answer: ", answer)
+# Display captured image from webcam
+if ctx.video_transformer and ctx.video_transformer.image:
+    st.image(ctx.video_transformer.image, caption='Captured Image', use_column_width=True)
 
-# Run the Streamlit application
-if __name__ == "__main__":
-    main()
+# Upload an image
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+
+# Question input
+question = st.text_input("Ask a question about the image")
+
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
+elif ctx.video_transformer and ctx.video_transformer.image:
+    image = ctx.video_transformer.image
+
+if image is not None and question:
+    # Prepare inputs for the VQA model with padding
+    inputs = processor(images=image, text=question, return_tensors="pt", padding="max_length", truncation=True)
+
+    # Forward pass
+    outputs = model(**inputs)
+    logits = outputs.logits
+    predicted_answer = torch.argmax(logits, dim=1)
+
+    # Convert predicted answer to text
+    answer = tokenizer.decode(predicted_answer, skip_special_tokens=True)
+
+    st.write("Answer:", answer)
