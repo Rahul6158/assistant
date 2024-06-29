@@ -5,40 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 
-
-# Custom CSS styles
-st.markdown(
-    """
-    <style>
-    body {
-        background-color: #f0f0f0; /* Set a background color */
-        font-family: Arial, sans-serif; /* Change font family */
-        padding: 1rem; /* Add padding */
-    }
-    .stButton > button {
-        background-color: #0366d6; /* Change button background color */
-        color: white; /* Change button text color */
-        border-radius: 5px; /* Rounded corners */
-        padding: 0.5rem 1rem; /* Add padding inside the button */
-        margin-top: 1rem; /* Add top margin */
-        cursor: pointer; /* Change cursor on hover */
-    }
-    .stTextInput > div > div > input {
-        border-radius: 5px; /* Rounded text input */
-        padding: 0.5rem; /* Add padding inside text input */
-    }
-    .stSelectbox > div > div > div > div > select {
-        border-radius: 5px; /* Rounded select box */
-        padding: 0.5rem; /* Add padding inside select box */
-    }
-    .stSelectbox > div > div > div > div {
-        margin-top: 1rem; /* Add top margin for select box */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 # Set up API URL and headers
 API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
 headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
@@ -102,50 +68,56 @@ if uploaded_file is not None:
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
 
-    # Use st.columns() to divide into two halves vertically
-    left_column, right_column = st.columns(2)
+    # List to store plot types and data
+    plots = []
 
-    # Left half: Integrated Plots
-    with left_column:
-        st.subheader("Integrated Plots")
+    # Function to add new plot
+    def add_plot():
+        plots.append({
+            'plot_type': st.selectbox("Select Plot Type:", plot_types),
+            'x_column': st.selectbox("Select X-axis column:", df.columns),
+            'y_column': st.selectbox("Select Y-axis column:", df.columns)
+        })
 
-        plot_types = ['Line Plot', 'Scatter Plot', 'Histogram', 'Bar Chart', 'Box Plot', 'Violin Plot', 'Heatmap', 'Area Plot', 'Pie Chart', '3D Scatter Plot']
-        plot_type = st.selectbox("Select Plot Type:", plot_types)
+    # Initial plot types
+    plot_types = ['Line Plot', 'Scatter Plot', 'Histogram', 'Bar Chart', 'Box Plot', 'Violin Plot', 'Heatmap', 'Area Plot', 'Pie Chart', '3D Scatter Plot']
 
-        if plot_type == 'Line Plot':
-            st.subheader('Line Plot')
-            x_column = st.selectbox("Select X-axis column:", df.columns)
-            y_column = st.selectbox("Select Y-axis column:", df.columns)
+    # Display existing plots and allow adding new ones
+    while st.button("Add Plot"):
+        add_plot()
+
+    # Display each plot
+    for idx, plot in enumerate(plots):
+        st.subheader(f"{plot['plot_type']} {idx + 1}")
+
+        if plot['plot_type'] == 'Line Plot':
             fig_line, ax_line = plt.subplots()
-            ax_line.plot(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10))
+            ax_line.plot(df[plot['x_column']].sort_values(ascending=False).head(10), df[plot['y_column']].sort_values(ascending=False).head(10))
             ax_line.set_title('Line Plot')
-            ax_line.set_xlabel(x_column)
-            ax_line.set_ylabel(y_column)
+            ax_line.set_xlabel(plot['x_column'])
+            ax_line.set_ylabel(plot['y_column'])
             ax_line.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_line)
 
-        elif plot_type == 'Scatter Plot':
-            st.subheader('Scatter Plot')
-            x_column = st.selectbox("Select X-axis column:", df.columns)
-            y_column = st.selectbox("Select Y-axis column:", df.columns)
+        elif plot['plot_type'] == 'Scatter Plot':
             fig_scatter, ax_scatter = plt.subplots()
-            ax_scatter.scatter(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10), color='g')
+            ax_scatter.scatter(df[plot['x_column']].sort_values(ascending=False).head(10), df[plot['y_column']].sort_values(ascending=False).head(10), color='g')
             ax_scatter.set_title('Scatter Plot')
-            ax_scatter.set_xlabel(x_column)
-            ax_scatter.set_ylabel(y_column)
+            ax_scatter.set_xlabel(plot['x_column'])
+            ax_scatter.set_ylabel(plot['y_column'])
             ax_scatter.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_scatter)
 
-        elif plot_type == 'Histogram':
-            st.subheader('Histogram')
-            column = st.selectbox("Select column for histogram:", df.columns)
+        elif plot['plot_type'] == 'Histogram':
             fig_hist, ax_hist = plt.subplots()
-            ax_hist.hist(df[column].sort_values(ascending=False).head(10), bins=10, color='c', alpha=0.75)
+            ax_hist.hist(df[plot['x_column']].sort_values(ascending=False).head(10), bins=10, color='c', alpha=0.75)
             ax_hist.set_title('Histogram')
             ax_hist.set_xlabel('Value')
             ax_hist.set_ylabel('Frequency')
             ax_hist.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_hist)
+
+        # Add more plot types as needed
 
         elif plot_type == 'Bar Chart':
             st.subheader('Bar Chart')
@@ -220,24 +192,23 @@ if uploaded_file is not None:
             st.pyplot(fig_3d)
 
     # Right half: API-based Question Answering
-    with right_column:
-        st.subheader("Ask Questions")
+    st.subheader("API-based Question Answering")
 
-        if uploaded_file is not None:
-            query_text_api = st.text_input("Enter your question :")
+    if uploaded_file is not None:
+        query_text_api = st.text_input("Enter your question for API-based QA:")
 
-            if st.button("Get Answer from API"):
-                if query_text_api:
-                    output_api = query({
-                        "inputs": {
-                            "query": query_text_api,
-                            "table": table_dict
-                        },
-                        "parameters": {
-                            "truncation": "only_first"
-                        }
-                    })
-                    answer_api = output_api.get('answer', 'No answer found.')
-                    display_answer(answer_api)
-                else:
-                    st.write("Please enter a question for API-based QA.")
+        if st.button("Get Answer from API"):
+            if query_text_api:
+                output_api = query({
+                    "inputs": {
+                        "query": query_text_api,
+                        "table": table_dict
+                    },
+                    "parameters": {
+                        "truncation": "only_first"
+                    }
+                })
+                answer_api = output_api.get('answer', 'No answer found.')
+                display_answer(answer_api)
+            else:
+                st.write("Please enter a question for API-based QA.")
