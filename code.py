@@ -119,7 +119,7 @@ if uploaded_file is not None:
 
         # Add more plot types as needed
 
-        elif plot_type == 'Bar Chart':
+        elif plot['plot_type'] == 'Bar Chart':
             st.subheader('Bar Chart')
             x_column = st.selectbox("Select X-axis column:", df.columns)
             y_column = st.selectbox("Select Y-axis column:", df.columns)
@@ -131,7 +131,7 @@ if uploaded_file is not None:
             ax_bar.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_bar)
 
-        elif plot_type == 'Box Plot':
+        elif plot['plot_type'] == 'Box Plot':
             st.subheader('Box Plot')
             column = st.selectbox("Select column for box plot:", df.columns)
             fig_box, ax_box = plt.subplots()
@@ -140,7 +140,7 @@ if uploaded_file is not None:
             ax_box.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_box)
 
-        elif plot_type == 'Violin Plot':
+        elif plot['plot_type'] == 'Violin Plot':
             st.subheader('Violin Plot')
             column = st.selectbox("Select column for violin plot:", df.columns)
             fig_violin, ax_violin = plt.subplots()
@@ -149,7 +149,7 @@ if uploaded_file is not None:
             ax_violin.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_violin)
 
-        elif plot_type == 'Heatmap':
+        elif plot['plot_type'] == 'Heatmap':
             st.subheader('Heatmap')
             fig_heatmap, ax_heatmap = plt.subplots()
             sns.heatmap(df.head(10).corr(), annot=True, cmap='coolwarm', ax=ax_heatmap)
@@ -157,7 +157,7 @@ if uploaded_file is not None:
             ax_heatmap.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_heatmap)
 
-        elif plot_type == 'Area Plot':
+        elif plot['plot_type'] == 'Area Plot':
             st.subheader('Area Plot')
             x_column = st.selectbox("Select X-axis column:", df.columns)
             y_column = st.selectbox("Select Y-axis column:", df.columns)
@@ -169,7 +169,7 @@ if uploaded_file is not None:
             ax_area.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_area)
 
-        elif plot_type == 'Pie Chart':
+        elif plot['plot_type'] == 'Pie Chart':
             st.subheader('Pie Chart')
             column = st.selectbox("Select column for pie chart:", df.columns)
             fig_pie, ax_pie = plt.subplots()
@@ -177,7 +177,7 @@ if uploaded_file is not None:
             ax_pie.set_title('Pie Chart')
             st.pyplot(fig_pie)
 
-        elif plot_type == '3D Scatter Plot':
+        elif plot['plot_type'] == '3D Scatter Plot':
             st.subheader('3D Scatter Plot')
             x_column = st.selectbox("Select X-axis column:", df.columns)
             y_column = st.selectbox("Select Y-axis column:", df.columns)
@@ -191,24 +191,29 @@ if uploaded_file is not None:
             ax_3d.set_title('3D Scatter Plot')
             st.pyplot(fig_3d)
 
-    # Right half: API-based Question Answering
-    st.subheader("API-based Question Answering")
+    # Perform question answering on the table data
+    question = st.text_input("Ask a question about the data:", "")
+    if st.button("Get Answer"):
+        payload = {
+            "table": table_dict,
+            "query": question
+        }
+        response = query(payload)
+        display_answer(response['answer'])
 
-    if uploaded_file is not None:
-        query_text_api = st.text_input("Enter your question for API-based QA:")
-
-        if st.button("Get Answer from API"):
-            if query_text_api:
-                output_api = query({
-                    "inputs": {
-                        "query": query_text_api,
-                        "table": table_dict
-                    },
-                    "parameters": {
-                        "truncation": "only_first"
-                    }
-                })
-                answer_api = output_api.get('answer', 'No answer found.')
-                display_answer(answer_api)
-            else:
-                st.write("Please enter a question for API-based QA.")
+# Function to copy answer to clipboard
+st.markdown(
+    """
+    <script>
+    function copyToClipboard(text) {
+        var dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        alert("Copied to clipboard: " + text);
+    }
+    </script>
+    """, unsafe_allow_html=True
+)
