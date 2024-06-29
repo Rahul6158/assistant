@@ -1,64 +1,58 @@
 import streamlit as st
-from PIL import Image
-import torch
-from transformers import AutoProcessor, AutoTokenizer, ViltForQuestionAnswering
-from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, WebRtcMode
-import av
+import pandas as pd
+import requests
 
-# Ensure torch is imported and version is printed
-print("Torch version:", torch.__version__)
+# Hugging Face API setup
+API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
+headers = {"Authorization": "Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}  # Replace with your actual token
 
-# Load VQA model, processor, and tokenizer from Hugging Face
-model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
-processor = AutoProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
-tokenizer = AutoTokenizer.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
+
+def convert_df_to_dict(df):
+    table = {}
+    for column in df.columns:
+        table[column] = df[column].astype(str).tolist()  # Convert all values to strings
+    return table
 
 # Streamlit app
-st.title("Visual Question Answering")
+st.title("Table-Based Question Answering")
 
-st.write("Upload an image or capture a live image and ask a question about it.")
+st.write("Upload a CSV or Excel file, and ask a question about the data.")
 
-# Class to process the video stream
-class VideoTransformer(VideoTransformerBase):
-    def __init__(self):
-        super().__init__()
-        self.image = None
-
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        image = Image.fromarray(img)
-        self.image = image
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
-
-# Streamlit WebRTC streamer
-ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformer)
-
-# Display captured image from webcam
-if ctx.video_transformer and ctx.video_transformer.image:
-    st.image(ctx.video_transformer.image, caption='Captured Image', use_column_width=True)
-
-# Upload an image
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-# Question input
-question = st.text_input("Ask a question about the image")
+# File upload
+uploaded_file = st.file_uploader("Choose a file...", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
-elif ctx.video_transformer and ctx.video_transformer.image:
-    image = ctx.video_transformer.image
+    # Read the file
+    if uploaded_file.name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+    else:
+        df = pd.read_excel(uploaded_file)
 
-if image is not None and question:
-    # Prepare inputs for the VQA model with padding
-    inputs = processor(images=image, text=question, return_tensors="pt", padding="max_length", truncation=True)
+    st.write("Data Preview:")
+    st.write(df.head())
 
-    # Forward pass
-    outputs = model(**inputs)
-    logits = outputs.logits
-    predicted_answer = torch.argmax(logits, dim=1)
+    # Convert DataFrame to dictionary format
+    table_dict = convert_df_to_dict(df)
 
-    # Convert predicted answer to text
-    answer = tokenizer.decode(predicted_answer, skip_special_tokens=True)
+    # Input query
+    query_text = st.text_input("Enter your question:")
 
-    st.write("Answer:", answer)
+    if st.button("Get Answer"):
+        if query_text:
+            # Query the model
+            output = query({
+                "inputs": {
+                    "query": query_text,
+                    "table": table_dict
+                },
+            })
+            st.write("Answer:", output)
+        else:
+            st.write("Please enter a question.")
+
+# Run Streamlit app
+if __name__ == "__main__":
+    st.run()
