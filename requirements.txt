@@ -6,3 +6,5 @@ streamlit-webrtc
 opencv-python-headless
 tensorflow
 pandas 
+matplotlib
+seaborns
