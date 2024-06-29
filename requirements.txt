@@ -5,3 +5,4 @@ torch
 streamlit-webrtc 
 opencv-python-headless
 tensorflow
+pandas 
