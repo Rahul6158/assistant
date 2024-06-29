@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 # Set up API URL and headers
@@ -28,37 +27,43 @@ st.write("Upload a CSV or Excel file, and ask a question about the data.")
 # File upload
 uploaded_file = st.file_uploader("Choose a file...", type=["csv", "xlsx"])
 
-if uploaded_file is not None:
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
-    else:
-        df = pd.read_excel(uploaded_file)
+# Divide the page into two halves vertically
+left_column, right_column = st.beta_columns(2)
 
-    st.write("Data Preview:")
-    st.write(df.head())
-
-    # Convert DataFrame to dictionary with truncation
-    table_dict = convert_df_to_dict(df)
-
-    # Question input
-    query_text = st.text_input("Enter your question:")
-
-    if st.button("Get Answer"):
-        if query_text:
-            output = query({
-                "inputs": {
-                    "query": query_text,
-                    "table": table_dict
-                },
-                "parameters": {
-                    "truncation": "only_first"
-                }
-            })
-            st.write("Answer:", output)
+# Left half of the page
+with left_column:
+    if uploaded_file is not None:
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
         else:
-            st.write("Please enter a question.")
+            df = pd.read_excel(uploaded_file)
 
-    # Integrated Plots
+        st.write("Data Preview:")
+        st.write(df.head())
+
+        # Convert DataFrame to dictionary with truncation
+        table_dict = convert_df_to_dict(df)
+
+        # Question input
+        query_text = st.text_input("Enter your question:")
+
+        if st.button("Get Answer"):
+            if query_text:
+                output = query({
+                    "inputs": {
+                        "query": query_text,
+                        "table": table_dict
+                    },
+                    "parameters": {
+                        "truncation": "only_first"
+                    }
+                })
+                st.write("Answer:", output)
+            else:
+                st.write("Please enter a question.")
+
+# Right half of the page for integrated plots
+with right_column:
     st.subheader("Integrated Plots")
 
     plot_types = ['Line Plot', 'Scatter Plot', 'Histogram', 'Bar Chart', 'Box Plot', 'Violin Plot', 'Heatmap', 'Area Plot', 'Pie Chart', '3D Scatter Plot']
