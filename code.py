@@ -23,11 +23,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-sth.set_theme({
-    "primary": "#0366d6",  # Primary color for buttons, etc.
-    "secondary": "#f0f0f0",  # Secondary color for backgrounds, etc.
-    "font": "Arial"  # Font family
-})
 # Set up API URL and headers
 API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
 headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
