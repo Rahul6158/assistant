@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 # Set up API URL and headers
@@ -21,9 +20,38 @@ def convert_df_to_dict(df, max_rows=20, max_columns=5):
         table[column] = truncated_df[column].astype(str).tolist()  # Convert all values to strings
     return table
 
+def display_answer(answer):
+    st.markdown(f"**Answer:** {answer}")
+    st.write("")  # Empty line for spacing
+
+    # HTML and CSS for copy button
+    st.markdown(
+        """
+        <style>
+        .copy-btn {
+            background-color: #f0f0f0;
+            border: none;
+            color: #0366d6;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
+
+    # Copy button to copy answer to clipboard
+    st.markdown(
+        f'<button class="copy-btn" onclick="copyToClipboard(\'{answer}\')">Copy Answer</button>',
+        unsafe_allow_html=True
+    )
+
 # Streamlit app setup
-st.title("Table-Based Question Answering with Integrated Plots")
-st.write("Upload a CSV or Excel file, and ask a question about the data.")
+st.title("Table-Based Question Answering with Integrated Plots and API")
 
 # File upload
 uploaded_file = st.file_uploader("Choose a file...", type=["csv", "xlsx"])
@@ -39,24 +67,6 @@ if uploaded_file is not None:
 
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
-
-    # Question input
-    query_text = st.text_input("Enter your question:")
-
-    if st.button("Get Answer"):
-        if query_text:
-            output = query({
-                "inputs": {
-                    "query": query_text,
-                    "table": table_dict
-                },
-                "parameters": {
-                    "truncation": "only_first"
-                }
-            })
-            st.write("Answer:", output)
-        else:
-            st.write("Please enter a question.")
 
     # Use st.columns() to divide into two halves vertically
     left_column, right_column = st.columns(2)
