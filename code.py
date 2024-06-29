@@ -10,7 +10,7 @@ def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
     return response.json()
 
-def convert_df_to_dict(df, max_rows=20, max_columns=5):
+def convert_df_to_dict(df, max_rows=50, max_columns=10):
     truncated_df = df.iloc[:max_rows, :max_columns]  # Limit the number of rows and columns
     table = {}
     for column in truncated_df.columns:
@@ -31,7 +31,7 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
 
     st.write("Data Preview:")
-    st.write(df.head())
+    st.dataframe(df)  # Use st.dataframe to allow scrolling and better preview
 
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
@@ -50,6 +50,9 @@ if uploaded_file is not None:
                     "truncation": "only_first"
                 }
             })
-            st.write("Answer:", output)
+            if "error" in output:
+                st.write("Error:", output["error"])
+            else:
+                st.write("Answer:", output.get('generated_text', 'No answer generated.'))
         else:
             st.write("Please enter a question.")
