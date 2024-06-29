@@ -173,7 +173,7 @@ if uploaded_file is not None:
 
         if uploaded_file is not None:
             query_text_api = st.text_input("Enter your question for API-based QA:")
-            
+
             if st.button("Get Answer from API"):
                 if query_text_api:
                     output_api = query({
@@ -185,6 +185,7 @@ if uploaded_file is not None:
                             "truncation": "only_first"
                         }
                     })
-                    st.write("Answer from API:", output_api)
+                    answer_api = output_api.get('answer', 'No answer found.')
+                    display_answer(answer_api)
                 else:
                     st.write("Please enter a question for API-based QA.")
