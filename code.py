@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 
+
 # Custom CSS styles
 st.markdown(
     """
@@ -12,11 +13,26 @@ st.markdown(
     body {
         background-color: #f0f0f0; /* Set a background color */
         font-family: Arial, sans-serif; /* Change font family */
+        padding: 1rem; /* Add padding */
     }
     .stButton > button {
         background-color: #0366d6; /* Change button background color */
         color: white; /* Change button text color */
         border-radius: 5px; /* Rounded corners */
+        padding: 0.5rem 1rem; /* Add padding inside the button */
+        margin-top: 1rem; /* Add top margin */
+        cursor: pointer; /* Change cursor on hover */
+    }
+    .stTextInput > div > div > input {
+        border-radius: 5px; /* Rounded text input */
+        padding: 0.5rem; /* Add padding inside text input */
+    }
+    .stSelectbox > div > div > div > div > select {
+        border-radius: 5px; /* Rounded select box */
+        padding: 0.5rem; /* Add padding inside select box */
+    }
+    .stSelectbox > div > div > div > div {
+        margin-top: 1rem; /* Add top margin for select box */
     }
     </style>
     """,
