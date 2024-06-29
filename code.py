@@ -59,10 +59,10 @@ if uploaded_file is not None:
             st.write("Please enter a question.")
 
     # Dividing page into two halves for plots
-    left_column, right_column = st.beta_columns(2)
+    col1, col2 = st.columns(2)
 
     # Left half for plots
-    with left_column:
+    with col1:
         st.subheader("Left Half Plots")
 
         # Line Plot
@@ -98,7 +98,7 @@ if uploaded_file is not None:
         st.pyplot(fig_hist)
 
     # Right half for plots
-    with right_column:
+    with col2:
         st.subheader("Right Half Plots")
 
         # Bar Chart
