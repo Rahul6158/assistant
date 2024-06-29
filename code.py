@@ -87,6 +87,7 @@ if uploaded_file is not None:
             ax_line.set_title('Line Plot')
             ax_line.set_xlabel(x_column)
             ax_line.set_ylabel(y_column)
+            ax_line.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_line)
 
         elif plot_type == 'Scatter Plot':
@@ -98,6 +99,7 @@ if uploaded_file is not None:
             ax_scatter.set_title('Scatter Plot')
             ax_scatter.set_xlabel(x_column)
             ax_scatter.set_ylabel(y_column)
+            ax_scatter.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_scatter)
 
         elif plot_type == 'Histogram':
@@ -108,6 +110,7 @@ if uploaded_file is not None:
             ax_hist.set_title('Histogram')
             ax_hist.set_xlabel('Value')
             ax_hist.set_ylabel('Frequency')
+            ax_hist.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_hist)
 
         elif plot_type == 'Bar Chart':
@@ -119,6 +122,7 @@ if uploaded_file is not None:
             ax_bar.set_title('Bar Chart')
             ax_bar.set_xlabel(x_column)
             ax_bar.set_ylabel(y_column)
+            ax_bar.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_bar)
 
         elif plot_type == 'Box Plot':
@@ -127,6 +131,7 @@ if uploaded_file is not None:
             fig_box, ax_box = plt.subplots()
             sns.boxplot(x=df[column].head(10), ax=ax_box)
             ax_box.set_title('Box Plot')
+            ax_box.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_box)
 
         elif plot_type == 'Violin Plot':
@@ -135,6 +140,7 @@ if uploaded_file is not None:
             fig_violin, ax_violin = plt.subplots()
             sns.violinplot(x=df[column].head(10), ax=ax_violin)
             ax_violin.set_title('Violin Plot')
+            ax_violin.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_violin)
 
         elif plot_type == 'Heatmap':
@@ -142,6 +148,7 @@ if uploaded_file is not None:
             fig_heatmap, ax_heatmap = plt.subplots()
             sns.heatmap(df.head(10).corr(), annot=True, cmap='coolwarm', ax=ax_heatmap)
             ax_heatmap.set_title('Heatmap')
+            ax_heatmap.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_heatmap)
 
         elif plot_type == 'Area Plot':
@@ -153,6 +160,7 @@ if uploaded_file is not None:
             ax_area.set_title('Area Plot')
             ax_area.set_xlabel(x_column)
             ax_area.set_ylabel(y_column)
+            ax_area.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_area)
 
         elif plot_type == 'Pie Chart':
