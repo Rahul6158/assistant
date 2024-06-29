@@ -52,7 +52,3 @@ if uploaded_file is not None:
             st.write("Answer:", output)
         else:
             st.write("Please enter a question.")
-
-# Run Streamlit app
-if __name__ == "__main__":
-    st.run()
