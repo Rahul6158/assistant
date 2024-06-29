@@ -35,7 +35,7 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
 
     st.write("Data Preview:")
-    st.write(df.head())
+    st.write(df)  # Display the complete data preview
 
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
