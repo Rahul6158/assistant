@@ -35,7 +35,7 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
 
     st.write("Data Preview:")
-    st.write(df)  # Show full data preview
+    st.write(df.head())
 
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
@@ -58,93 +58,107 @@ if uploaded_file is not None:
         else:
             st.write("Please enter a question.")
 
-    # Dividing page into two halves for plots
-    left_column, right_column = st.beta_columns(2)
+    # Integrated Plots
+    st.subheader("Integrated Plots")
 
-    # Left half for plots
-    with left_column:
-        st.subheader("Left Half Plots")
+    plot_types = ['Line Plot', 'Scatter Plot', 'Histogram', 'Bar Chart', 'Box Plot', 'Violin Plot', 'Heatmap', 'Area Plot', 'Pie Chart', '3D Scatter Plot']
+    plot_type = st.selectbox("Select Plot Type:", plot_types)
 
-        # Line Plot
+    if plot_type == 'Line Plot':
         st.subheader('Line Plot')
-        x_column_line = st.selectbox("Select X-axis column for Line Plot:", df.columns)
-        y_column_line = st.selectbox("Select Y-axis column for Line Plot:", df.columns)
+        x_column = st.selectbox("Select X-axis column:", df.columns)
+        y_column = st.selectbox("Select Y-axis column:", df.columns)
         fig_line, ax_line = plt.subplots()
-        ax_line.plot(df[x_column_line], df[y_column_line])
+        ax_line.plot(df[x_column], df[y_column])
         ax_line.set_title('Line Plot')
-        ax_line.set_xlabel(x_column_line)
-        ax_line.set_ylabel(y_column_line)
+        ax_line.set_xlabel(x_column)
+        ax_line.set_ylabel(y_column)
         st.pyplot(fig_line)
 
-        # Scatter Plot
+    elif plot_type == 'Scatter Plot':
         st.subheader('Scatter Plot')
-        x_column_scatter = st.selectbox("Select X-axis column for Scatter Plot:", df.columns)
-        y_column_scatter = st.selectbox("Select Y-axis column for Scatter Plot:", df.columns)
+        x_column = st.selectbox("Select X-axis column:", df.columns)
+        y_column = st.selectbox("Select Y-axis column:", df.columns)
         fig_scatter, ax_scatter = plt.subplots()
-        ax_scatter.scatter(df[x_column_scatter], df[y_column_scatter], color='g')
+        ax_scatter.scatter(df[x_column], df[y_column], color='g')
         ax_scatter.set_title('Scatter Plot')
-        ax_scatter.set_xlabel(x_column_scatter)
-        ax_scatter.set_ylabel(y_column_scatter)
+        ax_scatter.set_xlabel(x_column)
+        ax_scatter.set_ylabel(y_column)
         st.pyplot(fig_scatter)
 
-        # Histogram
+    elif plot_type == 'Histogram':
         st.subheader('Histogram')
-        column_hist = st.selectbox("Select column for Histogram:", df.columns)
+        column = st.selectbox("Select column for histogram:", df.columns)
         fig_hist, ax_hist = plt.subplots()
-        ax_hist.hist(df[column_hist], bins=20, color='c', alpha=0.75)
+        ax_hist.hist(df[column], bins=20, color='c', alpha=0.75)
         ax_hist.set_title('Histogram')
         ax_hist.set_xlabel('Value')
         ax_hist.set_ylabel('Frequency')
         st.pyplot(fig_hist)
 
-    # Right half for plots
-    with right_column:
-        st.subheader("Right Half Plots")
-
-        # Bar Chart
+    elif plot_type == 'Bar Chart':
         st.subheader('Bar Chart')
-        x_column_bar = st.selectbox("Select X-axis column for Bar Chart:", df.columns)
-        y_column_bar = st.selectbox("Select Y-axis column for Bar Chart:", df.columns)
+        x_column = st.selectbox("Select X-axis column:", df.columns)
+        y_column = st.selectbox("Select Y-axis column:", df.columns)
         fig_bar, ax_bar = plt.subplots()
-        ax_bar.bar(df[x_column_bar], df[y_column_bar], color='m')
+        ax_bar.bar(df[x_column], df[y_column], color='m')
         ax_bar.set_title('Bar Chart')
-        ax_bar.set_xlabel(x_column_bar)
-        ax_bar.set_ylabel(y_column_bar)
+        ax_bar.set_xlabel(x_column)
+        ax_bar.set_ylabel(y_column)
         st.pyplot(fig_bar)
 
-        # Box Plot
+    elif plot_type == 'Box Plot':
         st.subheader('Box Plot')
-        column_box = st.selectbox("Select column for Box Plot:", df.columns)
+        column = st.selectbox("Select column for box plot:", df.columns)
         fig_box, ax_box = plt.subplots()
-        sns.boxplot(x=df[column_box], ax=ax_box)
+        sns.boxplot(x=df[column], ax=ax_box)
         ax_box.set_title('Box Plot')
         st.pyplot(fig_box)
 
-        # Heatmap
+    elif plot_type == 'Violin Plot':
+        st.subheader('Violin Plot')
+        column = st.selectbox("Select column for violin plot:", df.columns)
+        fig_violin, ax_violin = plt.subplots()
+        sns.violinplot(x=df[column], ax=ax_violin)
+        ax_violin.set_title('Violin Plot')
+        st.pyplot(fig_violin)
+
+    elif plot_type == 'Heatmap':
         st.subheader('Heatmap')
         fig_heatmap, ax_heatmap = plt.subplots()
         sns.heatmap(df.corr(), annot=True, cmap='coolwarm', ax=ax_heatmap)
         ax_heatmap.set_title('Heatmap')
         st.pyplot(fig_heatmap)
 
-        # Pie Chart
+    elif plot_type == 'Area Plot':
+        st.subheader('Area Plot')
+        x_column = st.selectbox("Select X-axis column:", df.columns)
+        y_column = st.selectbox("Select Y-axis column:", df.columns)
+        fig_area, ax_area = plt.subplots()
+        df.plot.area(x=x_column, y=y_column, ax=ax_area)
+        ax_area.set_title('Area Plot')
+        ax_area.set_xlabel(x_column)
+        ax_area.set_ylabel(y_column)
+        st.pyplot(fig_area)
+
+    elif plot_type == 'Pie Chart':
         st.subheader('Pie Chart')
-        column_pie = st.selectbox("Select column for Pie Chart:", df.columns)
+        column = st.selectbox("Select column for pie chart:", df.columns)
         fig_pie, ax_pie = plt.subplots()
-        ax_pie.pie(df[column_pie].value_counts(), labels=df[column_pie].unique(), autopct='%1.1f%%')
+        ax_pie.pie(df[column].value_counts(), labels=df[column].unique(), autopct='%1.1f%%')
         ax_pie.set_title('Pie Chart')
         st.pyplot(fig_pie)
 
-        # 3D Scatter Plot
+    elif plot_type == '3D Scatter Plot':
         st.subheader('3D Scatter Plot')
-        x_column_3d = st.selectbox("Select X-axis column for 3D Scatter Plot:", df.columns)
-        y_column_3d = st.selectbox("Select Y-axis column for 3D Scatter Plot:", df.columns)
-        z_column_3d = st.selectbox("Select Z-axis column for 3D Scatter Plot:", df.columns)
+        x_column = st.selectbox("Select X-axis column:", df.columns)
+        y_column = st.selectbox("Select Y-axis column:", df.columns)
+        z_column = st.selectbox("Select Z-axis column:", df.columns)
         fig_3d = plt.figure()
         ax_3d = fig_3d.add_subplot(111, projection='3d')
-        ax_3d.scatter(df[x_column_3d], df[y_column_3d], df[z_column_3d], c='r', marker='o')
+        ax_3d.scatter(df[x_column], df[y_column], df[z_column], c='r', marker='o')
         ax_3d.set_title('3D Scatter Plot')
-        ax_3d.set_xlabel(x_column_3d)
-        ax_3d.set_ylabel(y_column_3d)
-        ax_3d.set_zlabel(z_column_3d)
+        ax_3d.set_xlabel(x_column)
+        ax_3d.set_ylabel(y_column)
+        ax_3d.set_zlabel(z_column)
         st.pyplot(fig_3d)
