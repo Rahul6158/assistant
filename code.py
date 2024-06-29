@@ -4,7 +4,7 @@ import requests
 
 # Hugging Face API setup
 API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
-headers = {"Authorization": "Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}  # Replace with your actual token
+headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
 
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
