@@ -5,6 +5,29 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 
+# Custom CSS styles
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #f0f0f0; /* Set a background color */
+        font-family: Arial, sans-serif; /* Change font family */
+    }
+    .stButton > button {
+        background-color: #0366d6; /* Change button background color */
+        color: white; /* Change button text color */
+        border-radius: 5px; /* Rounded corners */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+sth.set_theme({
+    "primary": "#0366d6",  # Primary color for buttons, etc.
+    "secondary": "#f0f0f0",  # Secondary color for backgrounds, etc.
+    "font": "Arial"  # Font family
+})
 # Set up API URL and headers
 API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
 headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
