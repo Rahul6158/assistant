@@ -221,10 +221,10 @@ if uploaded_file is not None:
 
     # Right half: API-based Question Answering
     with right_column:
-        st.subheader("API-based Question Answering")
+        st.subheader("Ask Questions")
 
         if uploaded_file is not None:
-            query_text_api = st.text_input("Enter your question for API-based QA:")
+            query_text_api = st.text_input("Enter your question :")
 
             if st.button("Get Answer from API"):
                 if query_text_api:
