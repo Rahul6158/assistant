@@ -99,6 +99,13 @@ if uploaded_file is not None:
     st.write("Data Preview:")
     st.write(df)  # Display the complete data preview
 
+# Set up API URL and headers
+API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
+headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
+
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
 
