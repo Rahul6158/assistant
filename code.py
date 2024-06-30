@@ -1,10 +1,11 @@
-#data cleaner import streamlit as st
+# Data Cleaner
+import streamlit as st
 import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
-import streamlit as st
+
 # Custom CSS styles
 st.markdown(
     """
@@ -84,7 +85,7 @@ def display_answer(answer):
     )
 
 # Streamlit app setup
-st.title("Table-Based Question Answering with Integrated Plots ")
+st.title("Table-Based Question Answering with Integrated Plots")
 
 # File upload
 uploaded_file = st.file_uploader("Choose a file...", type=["csv", "xlsx"])
@@ -100,6 +101,25 @@ if uploaded_file is not None:
 
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
+
+    # Data cleaning operations
+    st.subheader("Data Cleaning Operations")
+    st.write(f"Number of rows: {df.shape[0]}")
+    st.write(f"Number of columns: {df.shape[1]}")
+
+    null_counts = df.isnull().sum()
+    non_null_counts = df.notnull().sum()
+    
+    st.write("Null values count per column:")
+    st.write(null_counts)
+    
+    st.write("Non-null values count per column:")
+    st.write(non_null_counts)
+
+    if st.button("Delete rows with null values"):
+        df = df.dropna()
+        st.write("Rows with null values have been deleted.")
+        st.write(f"Number of rows after deletion: {df.shape[0]}")
 
     # Use st.columns() to divide into two halves vertically
     left_column, right_column = st.columns(2)
@@ -189,7 +209,7 @@ if uploaded_file is not None:
             x_column = st.selectbox("Select X-axis column:", df.columns)
             y_column = st.selectbox("Select Y-axis column:", df.columns)
             fig_area, ax_area = plt.subplots()
-            df.head(10).plot.area(x=x_column, y=y_column, ax=ax_area)
+            ax_area.fill_between(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10), color='y', alpha=0.5)
             ax_area.set_title('Area Plot')
             ax_area.set_xlabel(x_column)
             ax_area.set_ylabel(y_column)
@@ -200,43 +220,27 @@ if uploaded_file is not None:
             st.subheader('Pie Chart')
             column = st.selectbox("Select column for pie chart:", df.columns)
             fig_pie, ax_pie = plt.subplots()
-            ax_pie.pie(df[column].head(10).value_counts(), labels=df[column].head(10).unique(), autopct='%1.1f%%')
+            ax_pie.pie(df[column].sort_values(ascending=False).head(10), labels=df.index[:10], autopct='%1.1f%%', shadow=True, startangle=140)
             ax_pie.set_title('Pie Chart')
             st.pyplot(fig_pie)
 
-        elif plot_type == '3D Scatter Plot':
-            st.subheader('3D Scatter Plot')
-            x_column = st.selectbox("Select X-axis column:", df.columns)
-            y_column = st.selectbox("Select Y-axis column:", df.columns)
-            z_column = st.selectbox("Select Z-axis column:", df.columns)
-            fig_3d = plt.figure()
-            ax_3d = fig_3d.add_subplot(111, projection='3d')
-            ax_3d.scatter(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10), df[z_column].sort_values(ascending=False).head(10), c='r', marker='o')
-            ax_3d.set_xlabel(x_column)
-            ax_3d.set_ylabel(y_column)
-            ax_3d.set_zlabel(z_column)
-            ax_3d.set_title('3D Scatter Plot')
-            st.pyplot(fig_3d)
+# Function to copy answer to clipboard
+def copy_to_clipboard(answer):
+    import pyperclip
+    pyperclip.copy(answer)
 
-    # Right half: API-based Question Answering
-    with right_column:
-        st.subheader("Table Question Answering")
+# Function call to copy answer
+st.markdown(
+    """
+    <script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert('Copied to clipboard');
+    }
+    </script>
+    """, unsafe_allow_html=True
+)
 
-        if uploaded_file is not None:
-            query_text_api = st.text_input("Enter your question :")
+# Display Streamlit app
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
-            if st.button("Get Answer"):
-                if query_text_api:
-                    output_api = query({
-                        "inputs": {
-                            "query": query_text_api,
-                            "table": table_dict
-                        },
-                        "parameters": {
-                            "truncation": "only_first"
-                        }
-                    })
-                    answer_api = output_api.get('answer', 'No answer found.')
-                    display_answer(answer_api)
-                else:
-                    st.write("Please enter a question")
