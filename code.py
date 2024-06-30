@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
-from mpl_toolkits.mplot3d import Axes3D
 
 # Custom CSS styles
 st.markdown(
@@ -54,38 +53,31 @@ def convert_df_to_dict(df, max_rows=20, max_columns=5):
         table[column] = truncated_df[column].astype(str).tolist()  # Convert all values to strings
     return table
 
-def display_answer(answer):
-    st.markdown(f"**Answer:** {answer}")
-    st.write("")  # Empty line for spacing
+def display_data_statistics(df):
+    st.subheader("Data Statistics")
+    st.write(f"Number of rows: {df.shape[0]}")
+    st.write(f"Number of columns: {df.shape[1]}")
 
-    # HTML and CSS for copy button
-    st.markdown(
-        """
-        <style>
-        .copy-btn {
-            background-color: #f0f0f0;
-            border: none;
-            color: #0366d6;
-            padding: 8px 16px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-            margin-top: 8px;
-            cursor: pointer;
-        }
-        </style>
-        """, unsafe_allow_html=True
-    )
+    null_counts = df.isnull().sum()
+    non_null_counts = df.notnull().sum()
+    
+    st.write("Null values count per column:")
+    st.write(null_counts)
+    
+    st.write("Non-null values count per column:")
+    st.write(non_null_counts)
 
-    # Copy button to copy answer to clipboard
-    st.markdown(
-        f'<button class="copy-btn" onclick="copyToClipboard(\'{answer}\')">Copy Answer</button>',
-        unsafe_allow_html=True
-    )
+def clean_data(df):
+    st.subheader("Data Cleaning Operations")
+    if st.button("Delete rows with null values"):
+        df_cleaned = df.dropna()
+        st.write("Rows with null values have been deleted.")
+        display_data_statistics(df_cleaned)
+        return df_cleaned
+    return df
 
 # Streamlit app setup
-st.title("Table-Based Question Answering with Integrated Plots")
+st.title("Table-Based Question Answering with Integrated Plots and Data Cleaning")
 
 # File upload
 uploaded_file = st.file_uploader("Choose a file...", type=["csv", "xlsx"])
@@ -99,34 +91,11 @@ if uploaded_file is not None:
     st.write("Data Preview:")
     st.write(df)  # Display the complete data preview
 
-# Set up API URL and headers
-API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
-headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
-
-def query(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
-    return response.json()
     # Convert DataFrame to dictionary with truncation
     table_dict = convert_df_to_dict(df)
 
-    # Data cleaning operations
-    st.subheader("Data Cleaning Operations")
-    st.write(f"Number of rows: {df.shape[0]}")
-    st.write(f"Number of columns: {df.shape[1]}")
-
-    null_counts = df.isnull().sum()
-    non_null_counts = df.notnull().sum()
-    
-    st.write("Null values count per column:")
-    st.write(null_counts)
-    
-    st.write("Non-null values count per column:")
-    st.write(non_null_counts)
-
-    if st.button("Delete rows with null values"):
-        df = df.dropna()
-        st.write("Rows with null values have been deleted.")
-        st.write(f"Number of rows after deletion: {df.shape[0]}")
+    # Display data statistics and perform cleaning
+    df = clean_data(df)
 
     # Use st.columns() to divide into two halves vertically
     left_column, right_column = st.columns(2)
@@ -227,26 +196,39 @@ def query(payload):
             st.subheader('Pie Chart')
             column = st.selectbox("Select column for pie chart:", df.columns)
             fig_pie, ax_pie = plt.subplots()
-            ax_pie.pie(df[column].sort_values(ascending=False).head(10), labels=df.index[:10], autopct='%1.1f%%', shadow=True, startangle=140)
+            ax_pie.pie(df[column].sort_values(ascending=False).head(10), labels=df.head(10).index, autopct='%1.1f%%', startangle=140)
             ax_pie.set_title('Pie Chart')
+            ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
             st.pyplot(fig_pie)
 
-# Function to copy answer to clipboard
-def copy_to_clipboard(answer):
-    import pyperclip
-    pyperclip.copy(answer)
+        elif plot_type == '3D Scatter Plot':
+            st.subheader('3D Scatter Plot')
+            x_column = st.selectbox("Select X-axis column:", df.columns)
+            y_column = st.selectbox("Select Y-axis column:", df.columns)
+            z_column = st.selectbox("Select Z-axis column:", df.columns)
+            fig_3d = plt.figure()
+            ax_3d = fig_3d.add_subplot(111, projection='3d')
+            ax_3d.scatter(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10), df[z_column].sort_values(ascending=False).head(10), c='r', marker='o')
+            ax_3d.set_xlabel(x_column)
+            ax_3d.set_ylabel(y_column)
+            ax_3d.set_zlabel(z_column)
+            st.pyplot(fig_3d)
 
-# Function call to copy answer
-st.markdown(
-    """
-    <script>
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text);
-        alert('Copied to clipboard');
-    }
-    </script>
-    """, unsafe_allow_html=True
-)
+    # Right half: Table-Based Question Answering
+    with right_column:
+        st.subheader("Table-Based Question Answering")
 
-# Display Streamlit app
-st.set_option('deprecation.showPyplotGlobalUse', False)
+        question = st.text_input("Ask a question about the data:")
+        if st.button("Get Answer"):
+            payload = {
+                "inputs": {
+                    "question": question,
+                    "table": table_dict
+                }
+            }
+            response = query(payload)
+            st.write(f"Question: {question}")
+            st.write(f"Answer: {response['answer']}")
+
+else:
+    st.write("Upload a CSV or Excel file to get started.")
