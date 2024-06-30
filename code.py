@@ -4,6 +4,7 @@ import requests
 import matplotlib.pyplot as plt
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
+from transformers import pipeline
 
 # Custom CSS styles
 st.markdown(
@@ -41,6 +42,9 @@ st.markdown(
 # Set up API URL and headers
 API_URL = "https://api-inference.huggingface.co/models/microsoft/tapex-base"
 headers = {"Authorization": "Bearer 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"}  # Replace with your actual token
+
+# Initialize text generation pipeline
+text_generator = pipeline("text-generation")
 
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
@@ -82,6 +86,15 @@ def display_answer(answer):
         f'<button class="copy-btn" onclick="copyToClipboard(\'{answer}\')">Copy Answer</button>',
         unsafe_allow_html=True
     )
+
+def generate_overview(df):
+    description = df.describe().to_dict()
+    overview = "Dataset Overview:\n\n"
+    for column, stats in description.items():
+        overview += f"Column: {column}\n"
+        for stat, value in stats.items():
+            overview += f"  {stat}: {value}\n"
+    return text_generator(overview, max_length=200, num_return_sequences=1)[0]['generated_text']
 
 # Streamlit app setup
 st.title("Table-Based Question Answering with Integrated Plots ")
@@ -181,7 +194,6 @@ if uploaded_file is not None:
             fig_heatmap, ax_heatmap = plt.subplots()
             sns.heatmap(df.head(10).corr(), annot=True, cmap='coolwarm', ax=ax_heatmap)
             ax_heatmap.set_title('Heatmap')
-            ax_heatmap.tick_params(axis='x', rotation=45, labelsize=8)  # Adjust rotation and font size
             st.pyplot(fig_heatmap)
 
         elif plot_type == 'Area Plot':
@@ -189,7 +201,7 @@ if uploaded_file is not None:
             x_column = st.selectbox("Select X-axis column:", df.columns)
             y_column = st.selectbox("Select Y-axis column:", df.columns)
             fig_area, ax_area = plt.subplots()
-            df.head(10).plot.area(x=x_column, y=y_column, ax=ax_area)
+            ax_area.fill_between(df[x_column].sort_values(ascending=False).head(10), df[y_column].sort_values(ascending=False).head(10), color='b', alpha=0.5)
             ax_area.set_title('Area Plot')
             ax_area.set_xlabel(x_column)
             ax_area.set_ylabel(y_column)
@@ -200,7 +212,7 @@ if uploaded_file is not None:
             st.subheader('Pie Chart')
             column = st.selectbox("Select column for pie chart:", df.columns)
             fig_pie, ax_pie = plt.subplots()
-            ax_pie.pie(df[column].head(10).value_counts(), labels=df[column].head(10).unique(), autopct='%1.1f%%')
+            ax_pie.pie(df[column].value_counts().sort_values(ascending=False).head(10), labels=df[column].value_counts().sort_values(ascending=False).head(10).index, autopct='%1.1f%%', colors=sns.color_palette('Set3'))
             ax_pie.set_title('Pie Chart')
             st.pyplot(fig_pie)
 
@@ -218,25 +230,34 @@ if uploaded_file is not None:
             ax_3d.set_title('3D Scatter Plot')
             st.pyplot(fig_3d)
 
-    # Right half: API-based Question Answering
+    # Right half: Overview and Question Answering
     with right_column:
-        st.subheader("Table Question Answering")
+        st.subheader("Dataset Overview")
 
-        if uploaded_file is not None:
-            query_text_api = st.text_input("Enter your question :")
+        overview = generate_overview(df)
+        st.write(overview)
 
-            if st.button("Get Answer"):
-                if query_text_api:
-                    output_api = query({
-                        "inputs": {
-                            "query": query_text_api,
-                            "table": table_dict
-                        },
-                        "parameters": {
-                            "truncation": "only_first"
-                        }
-                    })
-                    answer_api = output_api.get('answer', 'No answer found.')
-                    display_answer(answer_api)
-                else:
-                    st.write("Please enter a question")
+        st.subheader("Question Answering")
+        question = st.text_input("Ask a question about the table:")
+
+        if st.button("Get Answer"):
+            payload = {
+                "inputs": {
+                    "query": question,
+                    "table": table_dict
+                }
+            }
+
+            output = query(payload)
+            if 'error' in output:
+                st.write("Error:", output['error'])
+            else:
+                answer = output.get('answer', 'No answer found')
+                display_answer(answer)
+
+        # Add spacing between sections
+        st.write("")
+        st.write("")
+
+else:
+    st.write("Please upload a CSV or Excel file.")
